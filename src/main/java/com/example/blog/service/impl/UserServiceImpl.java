@@ -3,14 +3,11 @@ package com.example.blog.service.impl;
 import com.example.blog.entities.User;
 import com.example.blog.exception.BadRequestException;
 import com.example.blog.exception.ErrorMessages;
-import com.example.blog.exception.UnAuthorizedException;
 import com.example.blog.repositories.UserRepository;
+import com.example.blog.security.JwtUtils;
 import com.example.blog.service.UserService;
 import com.example.blog.shared.dto.UserDto;
 import com.example.blog.shared.utils.Utils;
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -18,6 +15,10 @@ import org.modelmapper.TypeToken;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -35,13 +36,21 @@ public class UserServiceImpl implements UserService {
 
     private final Utils utils;
 
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    private final JwtUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
+
     @Override
     public UserDto createUser(@Valid UserDto userDto) {
         ModelMapper mapper = new ModelMapper();
 
         checkUserDtoError(userDto);
         User userToCreate = mapper.map(userDto, User.class);
-        userToCreate.setUserId(utils.generateUserId(10));
+        String userId = utils.generateUserId(10);
+        userToCreate.setUserId(userId);
+        userToCreate.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
+        userToCreate.setEmailVerificationToken(utils.generateEmailVerificationStatus(userId));
 
         User createdUser = userRepository.save(userToCreate);
 
@@ -62,19 +71,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto loginUser(String username, String password) {
-        ModelMapper mapper = new ModelMapper();
-        if (username.contains("@")) {
-            checkEmailError(username);
-            User user = userRepository.findByEmailAndPassword(username, password)
-                    .orElseThrow(() -> new UnAuthorizedException(ErrorMessages.INCORRECT_LOGIN_REGISTRATION.getErrorMessage()));
-            return mapper.map(user, UserDto.class);
-        } else {
-            checkPhoneNumberError(username);
-            User user = userRepository.findByPhoneNumberAndPassword(username, password)
-                    .orElseThrow(() -> new UnAuthorizedException(ErrorMessages.INCORRECT_LOGIN_REGISTRATION.getErrorMessage()));
-            return mapper.map(user, UserDto.class);
-        }
+    public UserDto authenticate(UserDto userDto) {
+        final User user = userRepository.findByEmailOrPhoneNumber(userDto.getUsername(), userDto.getUsername())
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.INCORRECT_LOGIN_CREDENTIALS.getErrorMessage()));
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), userDto.getPassword())
+        );
+
+        final String jwt = jwtUtils.generateToken(user);
+        final String userId = user.getUserId();
+
+        UserDto returnValue = new UserDto();
+        returnValue.setToken("Bearer " + jwt);
+        returnValue.setUserId(userId);
+        return returnValue;
     }
 
     @Override
@@ -155,6 +166,18 @@ public class UserServiceImpl implements UserService {
         Optional<User> user = userRepository.findByEmailOrPhoneNumber(userDto.getEmail(), userDto.getPhoneNumber());
         if (user.isPresent())
             throw new BadRequestException(ErrorMessages.RECORD_ALREADY_EXIST.getErrorMessage());
+    }
+
+    @Override
+    public UserDto getUserDetails(String username) {
+        ModelMapper mapper = new ModelMapper();
+        User user = getUserByUsername(username);
+        return mapper.map(user, UserDto.class);
+    }
+
+    private User getUserByUsername(String username) {
+        return userRepository.findByEmailOrPhoneNumber(username, username)
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.INCORRECT_LOGIN_DETAILS.getErrorMessage()));
     }
 }
 

@@ -4,6 +4,7 @@ import com.example.blog.models.request.LoginRequest;
 import com.example.blog.models.request.UserRequest;
 import com.example.blog.models.request.UserUpdateRequest;
 import com.example.blog.models.response.ApiResponse;
+import com.example.blog.models.response.AuthRest;
 import com.example.blog.models.response.ResponseManager;
 import com.example.blog.models.response.UserRest;
 import com.example.blog.service.UserService;
@@ -14,7 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Type;
@@ -36,12 +37,13 @@ public class UserController {
         return new ResponseManager<UserRest>().success(HttpStatus.CREATED, userRest);
     }
 
-    @PostMapping(path = "login", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ApiResponse<UserRest> loginUser(@RequestBody LoginRequest loginRequest) {
+    @PostMapping("/login")
+    public ResponseEntity<AuthRest> authenticate(@RequestBody @Valid LoginRequest loginRequest) {
         ModelMapper mapper = new ModelMapper();
-        UserRest userRest = mapper.map(userService.loginUser(loginRequest.getUsername(), loginRequest.getPassword()), UserRest.class);
-        return new ResponseManager<UserRest>().success(HttpStatus.OK, userRest);
+        UserDto userDto = mapper.map(loginRequest, UserDto.class);
+        UserDto authenticatedUserDto = userService.authenticate(userDto);
+        AuthRest authRest = mapper.map(authenticatedUserDto, AuthRest.class);
+        return new ResponseEntity<>(authRest, HttpStatus.ACCEPTED);
     }
 
     @PutMapping(path = "/{userId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},

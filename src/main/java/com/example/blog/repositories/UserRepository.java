@@ -12,8 +12,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long>, PagingAndSortingRepository<User, Long> {
     Optional<User> findByUserId(String userId);
     Optional<User> findByEmailOrPhoneNumber(String email, String phoneNumber);
-    Optional<User> findByEmailAndPassword(String email, String password);
-    Optional<User> findByPhoneNumberAndPassword(String phoneNumber, String password);
+//    Optional<User> findByEmailAndPassword(String email, String password);
+//    Optional<User> findByPhoneNumberAndPassword(String phoneNumber, String password);
     Optional<User> findByEmail(String email);
     Optional<User> findByPhoneNumber(String phoneNumber);
 }
