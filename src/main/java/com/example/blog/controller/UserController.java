@@ -1,8 +1,6 @@
 package com.example.blog.controller;
 
-import com.example.blog.models.request.LoginRequest;
-import com.example.blog.models.request.UserRequest;
-import com.example.blog.models.request.UserUpdateRequest;
+import com.example.blog.models.request.*;
 import com.example.blog.models.response.ApiResponse;
 import com.example.blog.models.response.AuthRest;
 import com.example.blog.models.response.ResponseManager;
@@ -13,9 +11,12 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Type;
@@ -28,12 +29,24 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping(path = "register", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+    @PostMapping(path = {"/register", "/register/"}, consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ApiResponse<UserRest> createUser(@RequestBody UserRequest userRequest) {
+    public ApiResponse<UserRest> createUser(@RequestBody @Valid UserRequest userRequest) {
         ModelMapper mapper = new ModelMapper();
         UserDto userDto = mapper.map(userRequest, UserDto.class);
         UserRest userRest = mapper.map(userService.createUser(userDto), UserRest.class);
+        return new ResponseManager<UserRest>().success(HttpStatus.CREATED, userRest);
+    }
+
+
+    @PreAuthorize("hasRole('ROLE_ADMIN') and #adminId == principal.userId")
+//    @Secured("ROLE_ADMIN")
+    @PostMapping(path = "/admin/register/{adminId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ApiResponse<UserRest> createUserByAdmin(@PathVariable String adminId, @RequestBody @Valid AdminUserRequest userRequest) {
+        ModelMapper mapper = new ModelMapper();
+        UserDto userDto = mapper.map(userRequest, UserDto.class);
+        UserRest userRest = mapper.map(userService.createUserByAdmin(adminId, userDto), UserRest.class);
         return new ResponseManager<UserRest>().success(HttpStatus.CREATED, userRest);
     }
 
@@ -48,10 +61,22 @@ public class UserController {
 
     @PutMapping(path = "/{userId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ApiResponse<UserRest> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest userRequest) {
+    public ApiResponse<UserRest> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest userRequest) {
         ModelMapper mapper = new ModelMapper();
         UserDto userDto = mapper.map(userRequest, UserDto.class);
         UserRest userRest = mapper.map(userService.updateUser(userId, userDto), UserRest.class);
+        return new ResponseManager<UserRest>().success(HttpStatus.OK, userRest);
+    }
+
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Secured("ROLE_ADMIN")
+    @PutMapping(path = "/admin/update/{adminId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ApiResponse<UserRest> updateUserByAdmin(@PathVariable String adminId, @RequestBody @Valid AdminUpdateRequest userRequest) {
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        UserDto userDto = mapper.map(userRequest, UserDto.class);
+        UserRest userRest = mapper.map(userService.updateUserByAdmin(adminId, userDto), UserRest.class);
         return new ResponseManager<UserRest>().success(HttpStatus.OK, userRest);
     }
 

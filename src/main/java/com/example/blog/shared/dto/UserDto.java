@@ -2,6 +2,8 @@ package com.example.blog.shared.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import java.util.Collection;
 import java.util.List;
 
 @Data
@@ -21,4 +23,5 @@ public class UserDto {
     private String emailVerificationToken;
     private Boolean emailVerificationStatus = false;
     private List<PostDto> postDtos;
+    private Collection<String> roles;
 }

@@ -73,20 +73,4 @@ public class Utils {
         if( attr == null ) return( 0 );
         return( attr.size() );
     }
-
-    public String generateEmailVerificationStatus(String userId) {
-        return Jwts.builder()
-                .setSubject(userId)
-                .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, SecurityConstants.getTokenSecret())
-                .compact();
-    }
-
-    public String generatePasswordResetToken(String userId) {
-        return Jwts.builder()
-                .setSubject(userId)
-                .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.PASSWORD_RESET_EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, SecurityConstants.getTokenSecret())
-                .compact();
-    }
 }

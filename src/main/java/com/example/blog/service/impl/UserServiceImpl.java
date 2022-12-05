@@ -1,14 +1,16 @@
 package com.example.blog.service.impl;
 
+import com.example.blog.entities.Role;
 import com.example.blog.entities.User;
 import com.example.blog.exception.BadRequestException;
 import com.example.blog.exception.ErrorMessages;
+import com.example.blog.repositories.RoleRepository;
 import com.example.blog.repositories.UserRepository;
 import com.example.blog.security.JwtUtils;
 import com.example.blog.service.UserService;
 import com.example.blog.shared.dto.UserDto;
+import com.example.blog.shared.utils.Roles;
 import com.example.blog.shared.utils.Utils;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -17,19 +19,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import javax.naming.NamingException;
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
-@Validated
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -41,16 +39,17 @@ public class UserServiceImpl implements UserService {
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
 
-    @Override
-    public UserDto createUser(@Valid UserDto userDto) {
-        ModelMapper mapper = new ModelMapper();
+    private final RoleRepository roleRepository;
 
-        checkUserDtoError(userDto);
-        User userToCreate = mapper.map(userDto, User.class);
-        String userId = utils.generateUserId(10);
-        userToCreate.setUserId(userId);
-        userToCreate.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
-        userToCreate.setEmailVerificationToken(utils.generateEmailVerificationStatus(userId));
+    @Override
+    public UserDto createUser(UserDto userDto) {
+        User userToCreate = getUserToCreate(userDto);
+        /*
+          Set up roles
+          user have default role (ROLE_USER)
+        */
+        Collection<Role> userRoles = getUserRoles(null);
+        userToCreate.setRoles(userRoles);
 
         User createdUser = userRepository.save(userToCreate);
 
@@ -67,7 +66,25 @@ public class UserServiceImpl implements UserService {
 //        ).create();
 //
 //        System.out.println(message.getSid());
-        return mapper.map(createdUser, UserDto.class);
+        return new ModelMapper().map(createdUser, UserDto.class);
+    }
+
+    /* Create user by an admin */
+    @Override
+    public UserDto createUserByAdmin(String adminId, UserDto userDto) {
+        User userToCreate = getUserToCreate(userDto);
+
+        User adminUser = userRepository.findByUserId(adminId)
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.ACCESS_DENIED.getErrorMessage()));
+
+        checkForAdminError(adminUser);
+
+        Collection<Role> userRoles = getUserRoles(userDto.getRoles());
+        userToCreate.setRoles(userRoles);
+
+        User createdUser = userRepository.save(userToCreate);
+
+        return new ModelMapper().map(createdUser, UserDto.class);
     }
 
     @Override
@@ -89,7 +106,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto updateUser(String userId, @Valid UserDto userDto) {
+    public UserDto updateUser(String userId, UserDto userDto) {
         ModelMapper mapper = new ModelMapper();
 
         User user = userRepository.findByUserId(userId)
@@ -98,6 +115,29 @@ public class UserServiceImpl implements UserService {
         User userToUpdate = mapper.map(user, User.class);
         userToUpdate.setFirstname(userDto.getFirstname());
         userToUpdate.setLastname(userDto.getLastname());
+
+        User updatedUser = userRepository.save(userToUpdate);
+        return mapper.map(updatedUser, UserDto.class);
+    }
+
+    @Override
+    public UserDto updateUserByAdmin(String adminId, UserDto userDto) {
+        User adminUser = userRepository.findByUserId(adminId)
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.FORBIDDEN.getErrorMessage()));
+
+        checkForAdminError(adminUser);
+
+        ModelMapper mapper = new ModelMapper();
+
+        User user = userRepository.findByUserId(userDto.getUserId())
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()));
+
+        User userToUpdate = mapper.map(user, User.class);
+        userToUpdate.setFirstname(userDto.getFirstname());
+        userToUpdate.setLastname(userDto.getLastname());
+
+        Collection<Role> userRoles = getUserRoles(userDto.getRoles());
+        userToUpdate.setRoles(userRoles);
 
         User updatedUser = userRepository.save(userToUpdate);
         return mapper.map(updatedUser, UserDto.class);
@@ -132,26 +172,53 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    private void checkEmailError(String email) {
-        if (email == null || email.isBlank())
-            throw new BadRequestException(ErrorMessages.EMAIL_EMPTY.getErrorMessage());
+    private User getUserToCreate(UserDto userDto) {
+        checkEmailAndExistingUser(userDto);
+        User userToCreate = new ModelMapper().map(userDto, User.class);
+        String userId = utils.generateUserId(10);
+        userToCreate.setUserId(userId);
+        userToCreate.setEncryptedPassword(bCryptPasswordEncoder.encode(userDto.getPassword()));
+        userToCreate.setEmailVerificationToken(jwtUtils.generateEmailVerificationToken(userId));
+        return userToCreate;
+    }
 
-        if (!utils.isValidEmail(email))
+    private void checkForAdminError(User user) {
+        Collection<Role> roles = user.getRoles();
+        boolean isAdmin = false;
+        Iterator<Role> iterator = roles.iterator();
+        if (iterator.hasNext()) {
+            Role role = iterator.next();
+            if (user.getEmail().equals("ikechi@admin.com") && role.getName().equals(Roles.ROLE_ADMIN.name()))
+                isAdmin = true;
+        }
+
+        if (!isAdmin)
+            throw new BadRequestException(ErrorMessages.ACCESS_DENIED.getErrorMessage());
+    }
+
+    private Collection<Role> getUserRoles(Collection<String> roleNames) {
+        Collection<Role> roles = new HashSet<>();
+
+        if (roleNames == null || roleNames.isEmpty()) {
+            roles.add(roleRepository.findByName(Roles.ROLE_USER.name()));
+            return roles;
+        }
+
+        for (String roleName : roleNames) {
+            Role role = roleRepository.findByName(roleName);
+            if (role != null) {
+                roles.add(role);
+            }
+        }
+
+        return roles;
+    }
+
+    private void checkEmailAndExistingUser(UserDto userDto) {
+        boolean validEmail = utils.isValidEmail(userDto.getEmail());
+        if(!validEmail)
             throw new BadRequestException(ErrorMessages.INVALID_EMAIL.getErrorMessage());
-    }
 
-    private void checkPhoneNumberError(String phone) {
-        if (phone == null || phone.isBlank())
-            throw new BadRequestException(ErrorMessages.PHONE_NUMBER_EMPTY.getErrorMessage());
-    }
-
-    private void checkPasswordError(String password) {
-        if (password == null || password.isBlank())
-            throw new BadRequestException(ErrorMessages.PASSWORD_EMPTY.getErrorMessage());
-    }
-
-    private void checkUserDtoError(UserDto userDto) {
-        checkEmailError(userDto.getEmail());
         try {
             String domain = userDto.getEmail().substring(userDto.getEmail().lastIndexOf('@') + 1);
             System.out.println("Domain: " + domain);
@@ -160,24 +227,11 @@ public class UserServiceImpl implements UserService {
         } catch (NamingException e) {
             throw new BadRequestException(ErrorMessages.INVALID_EMAIL.getErrorMessage());
         }
-        checkPhoneNumberError(userDto.getPhoneNumber());
-        checkPasswordError(userDto.getPassword());
 
         Optional<User> user = userRepository.findByEmailOrPhoneNumber(userDto.getEmail(), userDto.getPhoneNumber());
         if (user.isPresent())
             throw new BadRequestException(ErrorMessages.RECORD_ALREADY_EXIST.getErrorMessage());
     }
 
-    @Override
-    public UserDto getUserDetails(String username) {
-        ModelMapper mapper = new ModelMapper();
-        User user = getUserByUsername(username);
-        return mapper.map(user, UserDto.class);
-    }
-
-    private User getUserByUsername(String username) {
-        return userRepository.findByEmailOrPhoneNumber(username, username)
-                .orElseThrow(() -> new BadRequestException(ErrorMessages.INCORRECT_LOGIN_DETAILS.getErrorMessage()));
-    }
 }
 

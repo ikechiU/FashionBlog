@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -88,6 +89,13 @@ public class AppExceptionsHandler {
     public ApiResponse handleBadRequest(BadRequestException ex) {
         log.error(ex.getMessage());
         return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = HttpClientErrorException.Forbidden.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiResponse handleForBiddenRequest(HttpClientErrorException.Forbidden ex) {
+        log.error(ex.getMessage());
+        return buildErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
     @ExceptionHandler(value = UnAuthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)

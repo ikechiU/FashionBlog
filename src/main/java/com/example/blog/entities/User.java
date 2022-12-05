@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 @Getter
@@ -33,9 +34,33 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "userDetails", cascade = CascadeType.ALL)
     private List<Post> posts;
 
+    @ManyToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.EAGER)
+    @JoinTable(name = "users_roles",
+            joinColumns = @JoinColumn(name = "users_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "roles_id", referencedColumnName = "id"))
+    private Collection<Role> roles;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        Collection<GrantedAuthority> authorities = new HashSet<>();
+
+        Collection<Role> roles = getRoles();
+        Collection<Authority> authorityCollection = new HashSet<>();
+
+        if (roles == null) return  authorities;
+
+        roles.forEach(role -> {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+            authorityCollection.addAll(role.getAuthorities());
+        });
+
+        authorityCollection.forEach(authority -> {
+            authorities.add(new SimpleGrantedAuthority(authority.getName()));
+        });
+
+        return authorities;
+
+//        return Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override

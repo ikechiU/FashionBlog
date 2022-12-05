@@ -5,10 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Collection;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class UserRequest {
+public class AdminUserRequest {
     @NotBlank(message = "Firstname is mandatory")
     private String firstname;
     @NotBlank(message = "Lastname is mandatory")
@@ -19,4 +21,5 @@ public class UserRequest {
     private String password;
     @NotBlank(message = "Phone Number is mandatory")
     private String phoneNumber;
+    private Collection<String> roles;
 }

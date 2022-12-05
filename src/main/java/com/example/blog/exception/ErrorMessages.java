@@ -5,6 +5,8 @@ public enum ErrorMessages {
     EMAIL_EMPTY("Email is empty."),
     INVALID_EMAIL("Email is invalid."),
     INCORRECT_LOGIN_CREDENTIALS("Incorrect login credentials."),
+    ACCESS_DENIED("Access denied."),
+    FORBIDDEN("Forbidden."),
     PHONE_NUMBER_EMPTY("Phone number is empty."),
     PASSWORD_EMPTY("Password is empty."),
     WRONG_USER_ID("User does not exist."),

@@ -53,8 +53,38 @@ public class JwtUtils {
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
     }
 
+    public String generateEmailVerificationToken(String userId) {
+        Map<String, Object> claims = new HashMap<>();
+        return createEmailVerificationToken(claims, userId);
+    }
+
+    private String createEmailVerificationToken(Map<String, Object> claims, String userId) {
+        return Jwts.builder().setClaims(claims)
+                .setSubject(userId)
+                .claim("authorities", userId)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+    }
+
+    public String generatePasswordResetToken(String userId) {
+        Map<String, Object> claims = new HashMap<>();
+        return createPasswordResetToken(claims, userId);
+    }
+
+    private String createPasswordResetToken(Map<String, Object> claims, String userId) {
+        return Jwts.builder().setClaims(claims)
+                .setSubject(userId)
+                .claim("authorities", userId)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.PASSWORD_RESET_EXPIRATION_TIME))
+                .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+    }
+
+
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+
 }
