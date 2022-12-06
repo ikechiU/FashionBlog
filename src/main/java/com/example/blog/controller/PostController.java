@@ -15,6 +15,7 @@ import org.modelmapper.TypeToken;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +30,7 @@ public class PostController {
 
     private final PostService postService;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<PostRest> createPost(
@@ -45,6 +47,7 @@ public class PostController {
         return new ResponseManager<PostRest>().success(HttpStatus.CREATED, postRest);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<PostRest> updatePost(
@@ -70,15 +73,17 @@ public class PostController {
     }
 
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ApiResponse<List<PostRest>> getPosts(@RequestParam(value = "page", defaultValue = "0") int page,
+    public ApiResponse<List<PostRest>> getPosts(@RequestParam(value = "q", defaultValue = "") String q,
+                                                @RequestParam(value = "page", defaultValue = "0") int page,
                                                 @RequestParam(value = "limit", defaultValue = "5") int limit) {
         ModelMapper mapper = new ModelMapper();
         Type restType = new TypeToken<List<PostRest>>() {
         }.getType();
-        List<PostRest> postRests = mapper.map(postService.getPosts(page, limit), restType);
+        List<PostRest> postRests = mapper.map(postService.getPosts(q, page, limit), restType);
         return new ResponseManager<List<PostRest>>().success(HttpStatus.OK, postRests);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping(path = "/{postId}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<PostRest> deletePost(@PathVariable String postId) {
         PostRest postRest = new PostRest();

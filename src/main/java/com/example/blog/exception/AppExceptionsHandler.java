@@ -91,9 +91,9 @@ public class AppExceptionsHandler {
         return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value = HttpClientErrorException.Forbidden.class)
+    @ExceptionHandler(value = ForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiResponse handleForBiddenRequest(HttpClientErrorException.Forbidden ex) {
+    public ApiResponse handleForBiddenRequest(ForbiddenException ex) {
         log.error(ex.getMessage());
         return buildErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
@@ -103,6 +103,7 @@ public class AppExceptionsHandler {
         log.error(ex.getMessage());
         return buildErrorResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
+
     @ExceptionHandler(value = Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse handleException(Exception ex) {

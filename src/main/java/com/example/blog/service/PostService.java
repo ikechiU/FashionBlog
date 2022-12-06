@@ -10,6 +10,6 @@ public interface PostService {
     PostDto createPost(MultipartFile file, @Valid PostDto postDto) throws IOException;
     PostDto updatePost(MultipartFile file,  @Valid PostDto postDto) throws IOException;
     PostDto getPost(String postId);
-    List<PostDto> getPosts(int page, int limit);
+    List<PostDto> getPosts(String message, int page, int limit);
     PostDto deletePost(String postId);
 }

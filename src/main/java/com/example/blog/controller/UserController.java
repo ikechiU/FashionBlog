@@ -97,6 +97,7 @@ public class UserController {
         return new ResponseManager<List<UserRest>>().success(HttpStatus.OK, userRests);
     }
 
+    @PreAuthorize(" #userId == principal.userId")
     @DeleteMapping(path = "/{userId}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<UserRest> deleteUser(@PathVariable String userId) {
         UserRest userRest = new UserRest();
