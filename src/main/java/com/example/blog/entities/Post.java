@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -42,6 +43,11 @@ public class Post {
     @ManyToOne()
     @JoinColumn(name = "users_id")
     private User userDetails;
+
+    @OneToMany(mappedBy = "posts", cascade = CascadeType.ALL)
+    private List<PostLike> post_likes;
+    @OneToMany(mappedBy = "posts", cascade = CascadeType.ALL)
+    private List<Comment> comments;
 }
 
 

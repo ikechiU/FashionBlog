@@ -34,7 +34,13 @@ public class WebSecurity {
                         SecurityConstants.REGISTER_USER,
                         SecurityConstants.EMAIL_VERIFICATION_URL,
                         SecurityConstants.PASSWORD_RESET_REQUEST_URL,
-                        SecurityConstants.PASSWORD_RESET_URL
+                        SecurityConstants.PASSWORD_RESET_URL,
+                        "/v2/api-docs",
+                        "/swagger-ui.html",
+                        "/configuration/**",
+                        "/swagger*/**",
+                        "/webjars/**",
+                        "/"
                 ).permitAll()
                 .anyRequest()
                 .authenticated()
