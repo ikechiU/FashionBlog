@@ -3,6 +3,11 @@ package com.example.blog.security;
 import com.example.blog.exception.BadRequestException;
 import com.example.blog.exception.ErrorMessages;
 import com.example.blog.repositories.UserRepository;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +19,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Arrays;
+
 
 @Configuration
 @RequiredArgsConstructor
@@ -43,9 +51,10 @@ public class BeansConfiguration {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
-                .requestMatchers(
+                .antMatchers(
                         "/v2/api-docs",
-                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
                         "/configuration/**",
                         "/swagger*/**",
                         "/swagger.json",
@@ -58,5 +67,33 @@ public class BeansConfiguration {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
+//    @Bean
+//    public OpenAPI customOpenAPI() {
+//        return new OpenAPI()
+//                .info(new Info()
+//                        .title("Fashion Blog")
+//                        .version("1.0")
+//                        .description("A sample fashion blog Restful web service"))
+//                .addSecurityItem(new SecurityRequirement()
+//                        .addList("Authorization"))
+//                .components(new Components()
+//                        .addSecuritySchemes("my security", new SecurityScheme()
+//                                .name("my security")
+//                                .type(SecurityScheme.Type.HTTP)
+//                                .scheme("bearer")));
+//    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .components(new Components().addSecuritySchemes("bearer-jwt",
+                        new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")
+                                .in(SecurityScheme.In.HEADER).name("Authorization")))
+                .info(new Info().title("Fashion Blog").version("snapshot").description("A sample fashion blog Restful web service"))
+                .addSecurityItem(
+                        new SecurityRequirement().addList("bearer-jwt", Arrays.asList("read", "write")));
+    }
+
 
 }

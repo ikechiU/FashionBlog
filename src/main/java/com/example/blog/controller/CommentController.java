@@ -8,7 +8,7 @@ import com.example.blog.models.response.ResponseManager;
 import com.example.blog.service.CommentService;
 import com.example.blog.service.impl.CommentServiceImpl;
 import com.example.blog.shared.dto.CommentDto;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;

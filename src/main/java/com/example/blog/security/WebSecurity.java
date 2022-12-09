@@ -11,6 +11,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.SessionManagementFilter;
+import org.springframework.util.AntPathMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -28,23 +29,19 @@ public class WebSecurity {
                 .addFilterBefore(corsFilter(), SessionManagementFilter.class)//add your custom CorsFilter
                 .csrf()
                 .disable()
-                .authorizeHttpRequests()
-                .requestMatchers(
-                        SecurityConstants.LOGIN_USER,
-                        SecurityConstants.REGISTER_USER,
-                        SecurityConstants.EMAIL_VERIFICATION_URL,
-                        SecurityConstants.PASSWORD_RESET_REQUEST_URL,
-                        SecurityConstants.PASSWORD_RESET_URL,
-                        "/v2/api-docs",
-                        "/swagger-ui.html",
-                        "/configuration/**",
-                        "/swagger*/**",
-                        "/webjars/**",
-                        "/"
-                ).permitAll()
-                .anyRequest()
-                .authenticated()
-                .and()
+                .authorizeHttpRequests(auth -> {
+                    auth.regexMatchers(
+                                    SecurityConstants.LOGIN_USER,
+                                    SecurityConstants.REGISTER_USER,
+                                    SecurityConstants.REGISTER_USER_2,
+                                    SecurityConstants.EMAIL_VERIFICATION_URL,
+                                    SecurityConstants.PASSWORD_RESET_REQUEST_URL,
+                                    SecurityConstants.PASSWORD_RESET_URL
+
+                            ).permitAll()
+                            .anyRequest()
+                            .authenticated();
+                })
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()

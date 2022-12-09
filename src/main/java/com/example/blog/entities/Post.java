@@ -1,8 +1,8 @@
 package com.example.blog.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import jdk.jfr.Timestamp;
 import lombok.Getter;
 import lombok.Setter;

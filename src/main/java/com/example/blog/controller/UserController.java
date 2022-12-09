@@ -7,7 +7,9 @@ import com.example.blog.models.response.ResponseManager;
 import com.example.blog.models.response.UserRest;
 import com.example.blog.service.UserService;
 import com.example.blog.shared.dto.UserDto;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -29,6 +31,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @SecurityRequirements
     @PostMapping(path = {"/register", "/register/"}, consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<UserRest> createUser(@RequestBody @Valid UserRequest userRequest) {
@@ -50,6 +53,7 @@ public class UserController {
         return new ResponseManager<UserRest>().success(HttpStatus.CREATED, userRest);
     }
 
+    @SecurityRequirements
     @PostMapping("/login")
     public ResponseEntity<AuthRest> authenticate(@RequestBody @Valid LoginRequest loginRequest) {
         ModelMapper mapper = new ModelMapper();

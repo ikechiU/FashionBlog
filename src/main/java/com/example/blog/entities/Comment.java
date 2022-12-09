@@ -1,7 +1,7 @@
 package com.example.blog.entities;
 
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.List;

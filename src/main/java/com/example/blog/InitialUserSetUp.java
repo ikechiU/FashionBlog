@@ -9,7 +9,7 @@ import com.example.blog.repositories.UserRepository;
 import com.example.blog.shared.utils.Authorities;
 import com.example.blog.shared.utils.Roles;
 import com.example.blog.shared.utils.Utils;
-import jakarta.transaction.Transactional;
+import javax.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -70,7 +70,7 @@ public class InitialUserSetUp {
 
     }
     @Transactional
-    private Authority createAuthority(String authorityName) {
+    Authority createAuthority(String authorityName) {
         Authority authority = authorityRepository.findByName(authorityName);
         if (authority == null) {
             authority = new Authority(authorityName);
@@ -80,7 +80,7 @@ public class InitialUserSetUp {
     }
 
     @Transactional
-    private Role createRole(String roleName, List<Authority> authorities) {
+    Role createRole(String roleName, List<Authority> authorities) {
         Role role = roleRepository.findByName(roleName);
         if (role == null) {
             role = new Role(roleName);

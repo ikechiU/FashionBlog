@@ -10,7 +10,7 @@ import com.example.blog.repositories.UserRepository;
 import com.example.blog.service.PostService;
 import com.example.blog.shared.dto.PostDto;
 import com.example.blog.shared.utils.Utils;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
