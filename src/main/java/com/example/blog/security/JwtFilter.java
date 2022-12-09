@@ -3,6 +3,8 @@ package com.example.blog.security;
 import com.example.blog.exception.BadRequestException;
 import com.example.blog.exception.ErrorMessages;
 import com.example.blog.repositories.UserRepository;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,27 +30,36 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
-        String userEmail = null;
-        String jwt = null;
+        try {
+            String authHeader = request.getHeader("Authorization");
+            String userEmail = null;
+            String jwt = null;
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
-            userEmail = jwtUtils.extractUsername(jwt);
-        }
-
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.repository.findByEmailOrPhoneNumber(userEmail, userEmail)
-                    .orElseThrow(() -> new BadRequestException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()));
-
-            if (jwtUtils.validateToken(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                jwt = authHeader.substring(7);
+                userEmail = jwtUtils.extractUsername(jwt);
             }
+
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.repository.findByEmailOrPhoneNumber(userEmail, userEmail)
+                        .orElseThrow(() -> new BadRequestException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()));
+
+                if (jwtUtils.validateToken(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                }
+            }
+            filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException ex) {
+            ex.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
-        filterChain.doFilter(request, response);
+        catch (JwtException ex) {
+            ex.printStackTrace();
+            filterChain.doFilter(request, response);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.blog;
 
 import com.example.blog.security.AppProperties;
+import com.example.blog.security.JwtFilter;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

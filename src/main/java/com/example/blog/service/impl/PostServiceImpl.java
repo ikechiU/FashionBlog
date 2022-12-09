@@ -99,10 +99,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDto> getPosts(String message, int page, int limit) {
+    public List<PostDto> getPosts(String q, int page, int limit) {
         if (page > 0) page = page - 1;
         Pageable pageable = PageRequest.of(page, limit);
-        Page<Post> postPage = postRepository.findAllPostByMessage(message, pageable);
+        Page<Post> postPage;
+        if (q.equals("")) postPage = postRepository.findAll(pageable);
+        else postPage = postRepository.findAByMessageContainingIgnoreCase(q, pageable);
         List<Post> posts = postPage.getContent();
         Type dtoType = new TypeToken<List<PostDto>>() {
         }.getType();

@@ -17,6 +17,7 @@ import java.util.Optional;
 public interface PostRepository extends JpaRepository<Post, Long>, PagingAndSortingRepository<Post, Long> {
     Optional<Post> findByPostId(String postId);
     List<Post> findAllByUserDetails(User userDetails);
-    @Query(value = "select * from posts where message like '%:q%'", nativeQuery = true)
-    Page<Post> findAllPostByMessage(@Param("q") String message, Pageable pageable);
+//    @Query(value = "select * from posts where message like '%:q%'", nativeQuery = true)
+//    Page<Post> findAByMessageContainingIgnoreCase(@Param("q") String q, Pageable pageable);
+    Page<Post> findAByMessageContainingIgnoreCase(String q, Pageable pageable);
 }

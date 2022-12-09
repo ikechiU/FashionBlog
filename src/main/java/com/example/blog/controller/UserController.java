@@ -39,7 +39,7 @@ public class UserController {
     }
 
 
-    @PreAuthorize("hasRole('ROLE_ADMIN') and #adminId == principal.userId")
+    @PreAuthorize("hasAuthority('PRIVILEGE_AUTHORITY') or hasRole('ROLE_SUPER_ADMIN')")
 //    @Secured("ROLE_ADMIN")
     @PostMapping(path = "/admin/register/{adminId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -69,7 +69,8 @@ public class UserController {
     }
 
 //    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @Secured("ROLE_ADMIN")
+//    @Secured("ROLE_ADMIN")
+    @PreAuthorize("hasAuthority('PRIVILEGE_AUTHORITY') or hasRole('ROLE_SUPER_ADMIN')")
     @PutMapping(path = "/admin/update/{adminId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<UserRest> updateUserByAdmin(@PathVariable String adminId, @RequestBody @Valid AdminUpdateRequest userRequest) {
@@ -97,7 +98,7 @@ public class UserController {
         return new ResponseManager<List<UserRest>>().success(HttpStatus.OK, userRests);
     }
 
-    @PreAuthorize(" #userId == principal.userId")
+    @PreAuthorize("hasAuthority('PRIVILEGE_AUTHORITY') or #userId == principal.userId")
     @DeleteMapping(path = "/{userId}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<UserRest> deleteUser(@PathVariable String userId) {
         UserRest userRest = new UserRest();

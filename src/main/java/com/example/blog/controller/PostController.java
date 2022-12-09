@@ -30,7 +30,7 @@ public class PostController {
 
     private final PostService postService;
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_PRIVILEGE') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<PostRest> createPost(
@@ -47,7 +47,7 @@ public class PostController {
         return new ResponseManager<PostRest>().success(HttpStatus.CREATED, postRest);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_PRIVILEGE') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     @PutMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<PostRest> updatePost(
@@ -83,7 +83,7 @@ public class PostController {
         return new ResponseManager<List<PostRest>>().success(HttpStatus.OK, postRests);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_PRIVILEGE') or hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_ADMIN')")
     @DeleteMapping(path = "/{postId}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ApiResponse<PostRest> deletePost(@PathVariable String postId) {
         PostRest postRest = new PostRest();

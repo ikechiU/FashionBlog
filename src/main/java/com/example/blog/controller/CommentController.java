@@ -6,6 +6,7 @@ import com.example.blog.models.response.ApiResponse;
 import com.example.blog.models.response.CommentRest;
 import com.example.blog.models.response.ResponseManager;
 import com.example.blog.service.CommentService;
+import com.example.blog.service.impl.CommentServiceImpl;
 import com.example.blog.shared.dto.CommentDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CommentController {
 
-    private final CommentService commentService;
+    private final CommentServiceImpl commentService;
 
     @PostMapping(path = "/{userId}/post/{postId}/comment", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})

@@ -46,27 +46,9 @@ public class InitialUserSetUp {
         Authority deleteAuthority = createAuthority(Authorities.DELETE_AUTHORITY.name());
 
         createRole(Roles.ROLE_USER.name(), Collections.singletonList(readAuthority));
-        Role roleAdmin = createRole(Roles.ROLE_ADMIN.name(), Arrays.asList(readAuthority, writeAuthority));
+        createRole(Roles.ROLE_ADMIN.name(), Arrays.asList(readAuthority, writeAuthority));
+        createRole(Roles.ROLE_PRIVILEGE.name(), List.of(privilegeAuthority));
         Role roleSuperAdmin = createRole(Roles.ROLE_SUPER_ADMIN.name(), Arrays.asList(readAuthority, writeAuthority, privilegeAuthority, deleteAuthority));
-
-        if (roleAdmin == null) return;
-
-        User adminUser = new User();
-        adminUser.setFirstname("admin");
-        adminUser.setLastname("admin");
-        adminUser.setFirstname("admin");
-        adminUser.setEmail("admin@admin.com");
-        adminUser.setPhoneNumber("admin@admin.com");
-        adminUser.setEmailVerificationStatus(true);
-        adminUser.setUserId(utils.generateUserId(10));
-        adminUser.setEncryptedPassword(bCryptPasswordEncoder.encode("12345678"));
-        adminUser.setRoles(List.of(roleAdmin));
-
-        User storedUser = userRepository.findByEmail("admin@admin.com").orElse(null);
-        if(storedUser == null) {
-            userRepository.save(adminUser);
-        }
-
 
         if (roleSuperAdmin == null) return;
 
@@ -79,14 +61,12 @@ public class InitialUserSetUp {
         superAdminUser.setEmailVerificationStatus(true);
         superAdminUser.setUserId(utils.generateUserId(10));
         superAdminUser.setEncryptedPassword(bCryptPasswordEncoder.encode("123456789"));
-        superAdminUser.setRoles(List.of(roleAdmin));
+        superAdminUser.setRoles(List.of(roleSuperAdmin));
 
         User storedSuperUser = userRepository.findByEmail("super@admin.com").orElse(null);
         if(storedSuperUser == null) {
             userRepository.save(superAdminUser);
         }
-
-
 
     }
     @Transactional

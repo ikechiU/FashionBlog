@@ -19,12 +19,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.naming.NamingException;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @AllArgsConstructor
@@ -80,6 +83,7 @@ public class UserServiceImpl implements UserService {
         checkForAdminError(adminUser);
 
         Collection<Role> userRoles = getUserRoles(userDto.getRoles());
+
         userToCreate.setRoles(userRoles);
 
         User createdUser = userRepository.save(userToCreate);
@@ -102,6 +106,8 @@ public class UserServiceImpl implements UserService {
         UserDto returnValue = new UserDto();
         returnValue.setToken("Bearer " + jwt);
         returnValue.setUserId(userId);
+        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+        returnValue.setRoles(roles);
         return returnValue;
     }
 
@@ -137,6 +143,7 @@ public class UserServiceImpl implements UserService {
         userToUpdate.setLastname(userDto.getLastname());
 
         Collection<Role> userRoles = getUserRoles(userDto.getRoles());
+
         userToUpdate.setRoles(userRoles);
 
         User updatedUser = userRepository.save(userToUpdate);
@@ -168,7 +175,13 @@ public class UserServiceImpl implements UserService {
     public UserDto deleteUser(String userId) {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new BadRequestException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage()));
-        userRepository.delete(user);
+        Collection<Role> roles = user.getRoles();
+        boolean status = roles.stream().anyMatch(role -> role.getName().equals(Roles.ROLE_SUPER_ADMIN.name()));
+
+        if (!status)
+            userRepository.delete(user);
+        else
+            throw new BadRequestException(ErrorMessages.ACCESS_DENIED.getErrorMessage());
         return null;
     }
 
@@ -185,12 +198,10 @@ public class UserServiceImpl implements UserService {
     private void checkForAdminError(User user) {
         Collection<Role> roles = user.getRoles();
         boolean isAdmin = false;
-        Iterator<Role> iterator = roles.iterator();
-        if (iterator.hasNext()) {
-            Role role = iterator.next();
-            if (user.getEmail().equals("ikechi@admin.com") && role.getName().equals(Roles.ROLE_ADMIN.name()))
-                isAdmin = true;
-        }
+
+        boolean status = roles.stream().anyMatch(role -> role.getName().equals(Roles.ROLE_SUPER_ADMIN.name()));
+        if (status)
+            isAdmin = true;
 
         if (!isAdmin)
             throw new BadRequestException(ErrorMessages.ACCESS_DENIED.getErrorMessage());
@@ -210,6 +221,9 @@ public class UserServiceImpl implements UserService {
                 roles.add(role);
             }
         }
+
+        if (roles.stream().anyMatch(role -> role.getName().equals(Roles.ROLE_SUPER_ADMIN.name())))
+            throw new BadRequestException(ErrorMessages.ACCESS_DENIED.getErrorMessage());
 
         return roles;
     }
