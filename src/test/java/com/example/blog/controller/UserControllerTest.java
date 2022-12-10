@@ -1,6 +1,7 @@
 package com.example.blog.controller;
 
 
+import com.example.blog.security.JwtFilter;
 import com.example.blog.service.UserService;
 import com.example.blog.shared.dto.UserDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,10 +11,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -23,7 +22,6 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,10 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Ikechi Ucheagwu
  * @created 07/12/2022 - 02:19
  * @project Blog
- */
-
-
-/**
+ *
  * 1. Annotate the class with @RunWith(SpringRunner.class) - JUnit4
  * 2. Annotate the class with @WebMvcTest
  * 3. Inject WebApplicationContext
@@ -44,16 +39,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 6. Open Mock before each method under test.
  */
 
+
 @RunWith(SpringRunner.class)
 @WebMvcTest(UserController.class)
-@WebAppConfiguration
 class UserControllerTest {
-
     @Autowired
     WebApplicationContext webApplicationContext;
 
     @MockBean
     UserService mockUserService;
+
+    @MockBean
+    JwtFilter jwtFilter;
 
     MockMvc mockMvc;
     UserDto userDto;
@@ -81,7 +78,7 @@ class UserControllerTest {
 
         String jsonUserRequest = "{\"firstname\": \"Wale\", \"lastname\": \"Wale\", \"email\": \"wale@gmail.com\", \"password\": \"123456\","
                 + "\"phoneNumber\": \"+2348147428543\"}";
-        String urlPath = "users/register/";
+        String urlPath = "/users/register";
         MediaType contentType = new MediaType("application", "json");
 
         MvcResult mvcResult = mockMvc.perform(
@@ -89,10 +86,9 @@ class UserControllerTest {
                                 .contentType(contentType)
                                 .content(jsonUserRequest))
                 .andDo(print())
-                .andExpect(status().isCreated())
+                .andExpect(status().is2xxSuccessful())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(true))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.data.firstname").value("Wale"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(HttpStatus.CREATED))
                 .andReturn();
 
         assertEquals(MediaType.APPLICATION_JSON_VALUE, mvcResult.getResponse().getContentType());
