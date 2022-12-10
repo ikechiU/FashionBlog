@@ -7,6 +7,8 @@ import com.example.blog.models.response.ResponseManager;
 import com.example.blog.models.response.UserRest;
 import com.example.blog.service.UserService;
 import com.example.blog.shared.dto.UserDto;
+
+import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -42,6 +44,7 @@ public class UserController {
     }
 
 
+    @RolesAllowed(value = {"ROLE_SUPER_ADMIN", "ROLE_PRIVILEGE"})
     @PreAuthorize("hasAuthority('PRIVILEGE_AUTHORITY') or hasRole('ROLE_SUPER_ADMIN')")
 //    @Secured("ROLE_ADMIN")
     @PostMapping(path = "/admin/register/{adminId}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
