@@ -10,7 +10,7 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: ikechi
+          MYSQL_ROOT_PASSWORD: password
           MYSQL_DATABASE: blog_db
         ports:
           - 32574:3306
