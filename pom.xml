@@ -156,7 +156,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>my-fashion-blog</finalName>
     </build>
 
 </project>
