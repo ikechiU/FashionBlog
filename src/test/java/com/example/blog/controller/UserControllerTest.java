@@ -69,8 +69,8 @@ class UserControllerTest {
     UserDto userDto;
     UserDto userDto2;
 
-    private static Logger LOGGER = LoggerFactory.getLogger(UserControllerTest.class);
-    private static final Marker IMPORTANT = MarkerFactory.getMarker("IMPORTANT");
+//    private static Logger LOGGER = LoggerFactory.getLogger(UserControllerTest.class);
+//    private static final Marker IMPORTANT = MarkerFactory.getMarker("IMPORTANT");
 
 
     @BeforeEach
@@ -124,12 +124,12 @@ class UserControllerTest {
         assertEquals(MediaType.APPLICATION_JSON_VALUE, mvcResult.getResponse().getContentType());
         verify(mockUserService, times(1)).createUser(any(UserDto.class));
 
-        LOGGER.info("This is a log message that is not important!");
-        LOGGER.info(IMPORTANT, "This is a very important log message!");
-        MDC.put("user", "rafal.kuc@sematext.com");
-        LOGGER.info("This is an info level log message!");
-        LOGGER.warn("This is an WARN level log");
-        LOGGER.info("The parameter value in the log message is {}", mvcResult.getResponse().getContentType()); //parameterized
+//        LOGGER.info("This is a log message that is not important!");
+//        LOGGER.info(IMPORTANT, "This is a very important log message!");
+//        MDC.put("user", "rafal.kuc@sematext.com");
+//        LOGGER.info("This is an info level log message!");
+//        LOGGER.warn("This is an WARN level log");
+//        LOGGER.info("The parameter value in the log message is {}", mvcResult.getResponse().getContentType()); //parameterized
     }
 
 
