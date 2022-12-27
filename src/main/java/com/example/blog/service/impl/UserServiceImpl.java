@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
         UserDto returnValue = new UserDto();
         returnValue.setToken("Bearer " + jwt);
         returnValue.setUserId(userId);
-        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+        List<String> roles = user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
         returnValue.setRoles(roles);
         return returnValue;
     }
