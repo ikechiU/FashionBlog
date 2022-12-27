@@ -44,7 +44,8 @@ public class AppExceptionsHandler {
                 .collect(Collectors.toList());
     }
     private static String getValidationMessage(ObjectError error) {
-        if (error instanceof FieldError fieldError) {
+        if (error.getClass().equals(FieldError.class)) {
+            FieldError fieldError = (FieldError) error;
             String className = fieldError.getObjectName();
             String property = fieldError.getField();
             Object invalidValue = fieldError.getRejectedValue();

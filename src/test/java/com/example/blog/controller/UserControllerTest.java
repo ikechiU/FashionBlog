@@ -67,9 +67,6 @@ class UserControllerTest {
     UserDto userDto;
     UserDto userDto2;
 
-//    private static Logger LOGGER = LoggerFactory.getLogger(UserControllerTest.class);
-//    private static final Marker IMPORTANT = MarkerFactory.getMarker("IMPORTANT");
-
 
     @BeforeEach
     void init() {
@@ -136,17 +133,8 @@ class UserControllerTest {
         when(mockUserService.createUserByAdmin(anyString(), any(UserDto.class)))
                 .thenReturn(userDto);
 
-        String jsonUserRequest = """
-                {
-                    "firstname": "Boye",
-                    "lastname": "Samuel",
-                    "email": "samuel@gmail.com",
-                    "password": "123456",
-                    "phoneNumber": "+2342125412796",
-                    "roles": [
-                        "ROLE_USER"
-                    ]
-                }""";
+        String jsonUserRequest = "{\"firstname\": \"Wale\", \"lastname\": \"Wale\", \"email\": \"wale@gmail.com\", \"password\": \"123456\","
+                + "\"phoneNumber\": \"+2348147428543\"}, \"roles\": [\"ROLE_USER\"]";
 
         String urlPath = "/users/admin/register/qwerwtyuiwhgfdthie";
         MediaType contentType = new MediaType("application", "json");
